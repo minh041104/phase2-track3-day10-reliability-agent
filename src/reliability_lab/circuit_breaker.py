@@ -36,6 +36,7 @@ class CircuitBreaker:
     failure_count: int = 0
     success_count: int = 0
     opened_at: float | None = None
+    probe_in_flight: bool = False
     transition_log: list[dict[str, str | float]] = field(default_factory=list)
 
     def allow_request(self) -> bool:
@@ -46,9 +47,17 @@ class CircuitBreaker:
         """
         if self.state == CircuitState.OPEN:
             if self.opened_at is not None and time.monotonic() - self.opened_at >= self.reset_timeout_seconds:
+                self.failure_count = 0
+                self.success_count = 0
+                self.probe_in_flight = True
                 self._transition(CircuitState.HALF_OPEN, "reset_timeout_elapsed")
                 return True
             return False
+        if self.state == CircuitState.HALF_OPEN:
+            if self.probe_in_flight:
+                return False
+            self.probe_in_flight = True
+            return True
         return True
 
     def call(self, fn: Callable[..., T], *args: object, **kwargs: object) -> T:
@@ -65,21 +74,28 @@ class CircuitBreaker:
 
     def record_success(self) -> None:
         """Record success and close from HALF_OPEN if enough probes pass."""
-        # TODO(student): refine success threshold handling and counters.
+        self.probe_in_flight = False
         self.failure_count = 0
-        self.success_count += 1
-        if self.state == CircuitState.HALF_OPEN and self.success_count >= self.success_threshold:
-            self._transition(CircuitState.CLOSED, "probe_success")
+        if self.state == CircuitState.HALF_OPEN:
+            self.success_count += 1
+            if self.success_count >= self.success_threshold:
+                self._transition(CircuitState.CLOSED, "success_threshold_reached")
+                self.success_count = 0
+        else:
             self.success_count = 0
 
     def record_failure(self) -> None:
         """Record failure and open when threshold is reached."""
-        # TODO(student): handle HALF_OPEN failure explicitly and reset success counter.
-        self.failure_count += 1
+        self.probe_in_flight = False
         self.success_count = 0
-        if self.state == CircuitState.HALF_OPEN or self.failure_count >= self.failure_threshold:
-            self._transition(CircuitState.OPEN, "failure_threshold")
-            self.opened_at = time.monotonic()
+        if self.state == CircuitState.HALF_OPEN:
+            self.failure_count = 0
+            self._transition(CircuitState.OPEN, "probe_failure")
+            return
+        if self.state == CircuitState.CLOSED:
+            self.failure_count += 1
+            if self.failure_count >= self.failure_threshold:
+                self._transition(CircuitState.OPEN, "failure_threshold_reached")
 
     def _transition(self, new_state: CircuitState, reason: str) -> None:
         if self.state == new_state:
@@ -88,3 +104,7 @@ class CircuitBreaker:
             {"from": self.state.value, "to": new_state.value, "reason": reason, "ts": time.time()}
         )
         self.state = new_state
+        if new_state == CircuitState.OPEN:
+            self.opened_at = time.monotonic()
+        elif new_state == CircuitState.CLOSED:
+            self.opened_at = None

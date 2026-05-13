@@ -1,0 +1,127 @@
+{
+  "total_requests": 400,
+  "availability": 1.0,
+  "error_rate": 0.0,
+  "latency_p50_ms": 3.06,
+  "latency_p95_ms": 305.63,
+  "latency_p99_ms": 524.08,
+  "fallback_success_rate": 1.0,
+  "cache_hit_rate": 0.7725,
+  "circuit_open_count": 6,
+  "recovery_time_ms": 2932.1887493133545,
+  "estimated_cost": 0.042606,
+  "estimated_cost_saved": 0.309,
+  "scenarios": {
+    "primary_timeout_100": "pass",
+    "primary_flaky_50": "pass",
+    "all_healthy": "pass",
+    "cache_stale_candidate": "pass",
+    "cache_comparison": "pass"
+  },
+  "scenario_details": {
+    "primary_timeout_100": {
+      "description": "Primary provider fails 100%; all non-cache traffic should fallback",
+      "observed": {
+        "availability": 1.0,
+        "error_rate": 0.0,
+        "latency_p50_ms": 2.93,
+        "latency_p95_ms": 454.41,
+        "cache_hit_rate": 0.73,
+        "fallback_success_rate": 1.0,
+        "estimated_cost": 0.009882,
+        "estimated_cost_saved": 0.073,
+        "circuit_open_count": 4.0
+      },
+      "fallback_successes": 27,
+      "static_fallbacks": 0,
+      "cache_hits": 73,
+      "expected": "primary circuit opens and backup serves all non-cache traffic"
+    },
+    "primary_flaky_50": {
+      "description": "Primary provider fails 50%; circuit should oscillate",
+      "observed": {
+        "availability": 1.0,
+        "error_rate": 0.0,
+        "latency_p50_ms": 3.21,
+        "latency_p95_ms": 323.35,
+        "cache_hit_rate": 0.8,
+        "fallback_success_rate": 1.0,
+        "estimated_cost": 0.007654,
+        "estimated_cost_saved": 0.08,
+        "circuit_open_count": 2.0
+      },
+      "fallback_successes": 17,
+      "static_fallbacks": 0,
+      "cache_hits": 80,
+      "expected": "traffic remains mostly available while primary is flaky"
+    },
+    "all_healthy": {
+      "description": "Both providers healthy",
+      "observed": {
+        "availability": 1.0,
+        "error_rate": 0.0,
+        "latency_p50_ms": 3.0,
+        "latency_p95_ms": 230.85,
+        "cache_hit_rate": 0.82,
+        "fallback_success_rate": 0.0,
+        "estimated_cost": 0.00998,
+        "estimated_cost_saved": 0.082,
+        "circuit_open_count": 0.0
+      },
+      "fallback_successes": 0,
+      "static_fallbacks": 0,
+      "cache_hits": 82,
+      "expected": "healthy providers should keep availability near 100%"
+    },
+    "cache_stale_candidate": {
+      "description": "Similar date-sensitive queries should not false-hit",
+      "observed": {
+        "availability": 1.0,
+        "error_rate": 0.0,
+        "latency_p50_ms": 3.22,
+        "latency_p95_ms": 234.13,
+        "cache_hit_rate": 0.74,
+        "fallback_success_rate": 0.0,
+        "estimated_cost": 0.01509,
+        "estimated_cost_saved": 0.074,
+        "circuit_open_count": 0.0
+      },
+      "fallback_successes": 0,
+      "static_fallbacks": 0,
+      "cache_hits": 74,
+      "expected": "similar but date-conflicting queries must not cache-hit",
+      "false_hit_score": 0.7571,
+      "false_hit_logged": true
+    }
+  },
+  "cache_comparison": {
+    "without_cache": {
+      "availability": 1.0,
+      "error_rate": 0.0,
+      "latency_p50_ms": 209.4,
+      "latency_p95_ms": 236.85,
+      "cache_hit_rate": 0.0,
+      "fallback_success_rate": 0.0,
+      "estimated_cost": 0.05771,
+      "estimated_cost_saved": 0.0,
+      "circuit_open_count": 0.0
+    },
+    "with_cache": {
+      "availability": 1.0,
+      "error_rate": 0.0,
+      "latency_p50_ms": 0.5,
+      "latency_p95_ms": 229.65,
+      "cache_hit_rate": 0.73,
+      "fallback_success_rate": 0.0,
+      "estimated_cost": 0.0151,
+      "estimated_cost_saved": 0.073,
+      "circuit_open_count": 0.0
+    },
+    "delta": {
+      "latency_p50_ms": -208.9,
+      "latency_p95_ms": -7.2,
+      "estimated_cost": -0.04261,
+      "cache_hit_rate": 0.73
+    }
+  }
+}

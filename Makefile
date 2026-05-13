@@ -1,13 +1,13 @@
 .PHONY: test lint typecheck run-chaos report clean docker-up docker-down
 
 test:
-	pytest -q
+	pytest -q -p no:cacheprovider
 
 lint:
-	ruff check src tests scripts
+	ruff check --no-cache src tests scripts
 
 typecheck:
-	mypy src
+	mypy src --no-incremental --no-sqlite-cache
 
 run-chaos:
 	python scripts/run_chaos.py --config configs/default.yaml --out reports/metrics.json

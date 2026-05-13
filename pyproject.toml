@@ -27,3 +27,7 @@ src = ["src", "tests", "scripts"]
 python_version = "3.10"
 strict = true
 mypy_path = "src"
+
+[[tool.mypy.overrides]]
+module = ["redis", "yaml"]
+ignore_missing_imports = true
